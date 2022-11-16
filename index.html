@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>Godot日常</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://github.com/willusim/GodotBlog/favicon.ico?v=1668598154738">
+<link rel="stylesheet" href="https://github.com/willusim/GodotBlog/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="学习制作小游戏，应用Godot到能胜任的地方，不只是游戏，物联网啊、窗体制作啊等等。">
+    
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://github.com/willusim/GodotBlog">
+        <img src="https://github.com/willusim/GodotBlog/images/avatar.png?v=1668598154738" class="site-logo">
+        <h1 class="site-title">Godot日常</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            回到首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            学习笔记
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            实习项目
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            自我介绍
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      学习制作小游戏，应用Godot到能胜任的地方，不只是游戏，物联网啊、窗体制作啊等等。
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://github.com/willusim/GodotBlog/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://github.com/willusim/GodotBlog/post/rigidbodykinematicbodytuo-zhuai/">
+                  <h2 class="post-title">RigidBody（KinematicBody）拖拽</h2>
+                </a>
+                <div class="post-date">
+                  2022-11-16
+                </div>
+                <div class="post-abstract">
+                  <p>目标：想要用鼠标拾取和移动刚体<br>
+使用刚体可能很棘手。Godot的物理引擎控制着它们的运动，干扰这些运动往往会导致意想不到的结果。关键是要利用body（物体）的mode属性。这同样适用于2D或3D。<br>
+我们将从刚体对象开始，添加Sprite和CollisionShape2D。如果要设置“反弹”（Bounce）和“摩擦力”（Friction）属性，也可以添加PhysicsMaterial。<br>
+将body（物体）放在一个名为“pickable”的小组中。我们将使用它来允许主场景中可拾取对象的多个实例。</p>
+
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://github.com/willusim/GodotBlog/post/zhi-zuo-dan-mu/">
+                  <h2 class="post-title">制作弹幕</h2>
+                </a>
+                <div class="post-date">
+                  2022-11-14
+                </div>
+                <div class="post-abstract">
+                  
+                </div>
+              </div>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://github.com/willusim/GodotBlog/post/xue-xi-bi-ji/">
+                  <h2 class="post-title">学习笔记</h2>
+                </a>
+                <div class="post-date">
+                  2022-11-13
+                </div>
+                <div class="post-abstract">
+                  
+                </div>
+              </div>
+              
+                <a class="right" href="https://github.com/willusim/GodotBlog/post/xue-xi-bi-ji/">
+                  <div class="feature-container" style="background-image: url('https://github.com/willusim/GodotBlog/post-images/xue-xi-bi-ji.jpg')">
+                  </div>
+                </a>
+              
+            </article>
+          
+            <article class="post-item">
+              <div class="left">
+                <a href="https://github.com/willusim/GodotBlog/post/hello-gridea/">
+                  <h2 class="post-title">Hello Gridea</h2>
+                </a>
+                <div class="post-date">
+                  2018-12-12
+                </div>
+                <div class="post-abstract">
+                  <p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
+✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
+
+                </div>
+              </div>
+              
+                <a class="right" href="https://github.com/willusim/GodotBlog/post/hello-gridea/">
+                  <div class="feature-container" style="background-image: url('https://github.com/willusim/GodotBlog/post-images/hello-gridea.png')">
+                  </div>
+                </a>
+              
+            </article>
+          
+
+          <div class="pagination-container">
+  
+  
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

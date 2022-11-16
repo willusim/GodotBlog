@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>制作弹幕 | Godot日常</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://github.com/willusim/GodotBlog/favicon.ico?v=1668598154738">
+<link rel="stylesheet" href="https://github.com/willusim/GodotBlog/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="创建两个游戏对象：子弹和武器
+创建子弹：
+新建场景，根节点KinematicBody2D，重命名Bullet01。
+添加子节点Polygon2D，打开 Inspector &gt; Data &gt; Polygon ， 将Size设置为4..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://github.com/willusim/GodotBlog">
+        <img src="https://github.com/willusim/GodotBlog/images/avatar.png?v=1668598154738" class="site-logo">
+        <h1 class="site-title">Godot日常</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            回到首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            学习笔记
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            实习项目
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            自我介绍
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      学习制作小游戏，应用Godot到能胜任的地方，不只是游戏，物联网啊、窗体制作啊等等。
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://github.com/willusim/GodotBlog/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">制作弹幕</h2>
+            <div class="post-date">2022-11-14</div>
+            
+            <div class="post-content" v-pre>
+              <p>创建两个游戏对象：子弹和武器<br>
+创建子弹：<br>
+新建场景，根节点KinematicBody2D，重命名Bullet01。<br>
+添加子节点Polygon2D，打开 Inspector &gt; Data &gt; Polygon ， 将Size设置为4。同时为下面出现的点添加x, y值。考虑到演示作用，我们将子弹做大一点，因此，将边长设置为10，如：0.x = 10, 0.y = -10, 1.x = 10, 1.y = -10, 2.x = 10, 2.y = 10, 3.x = -10, 3.y = 10。<br>
+添加子节点CollisionShape2D节点，碰撞形状为矩形。<br>
+添加可见控制节点VisibilityNotifier2D节点。<br>
+添加脚本到Bullet01，保存为Bullet01.gd<br>
+定义变量：<br>
+var speed = 750<br>
+var velocity = Vector2()<br>
+创建start函数（供武器调用）<br>
+func start (pos, dir): #pos：武器的位置，dir：武器的旋转角度<br>
+position = pos<br>
+rotation = dir<br>
+velocity = Vector2(speed, 0).rotated(rotation)<br>
+在 _physics_process 函数中执行移动方法：<br>
+func _physics_process(delta):<br>
+move_and_collide(velocity * delta)<br>
+由武器来控制子弹发射，加一行判断：if get_parent().isShooting:<br>
+func _physics_process(delta):<br>
+if get_parent().isShooting:<br>
+move_and_collide(velocity * delta)<br>
+处理离开屏幕的信号，选中VisibilityNotifier2D节点，在Node面板，双击screen_exited信号，在Bullet01脚本中创建一个函数：<br>
+func _on_VisibilityNotifier2D_screen_exited():<br>
+queue_free()</p>
+<p>创建武器<br>
+创建场景，根节点Node2D，重命名为Weapon01.<br>
+创建脚本，Weapon01.gd，开始定义变量：<br>
+var Bullet01 = preload(&quot;res://Bullet01.tscn&quot;)<br>
+var bulletNum = 18<br>
+var shootNum = 0<br>
+var isShooting = true<br>
+创建一个shoot函数，用于实例化子弹并将它添加到武器场景中<br>
+func shoot():<br>
+var b = Bullet01.instance()<br>
+b.start(Vector2(0,0),shootNum * 0.35) #在Bullet.gd中定义的start函数<br>
+add_child(b)<br>
+shootNum += 1<br>
+创建计时器，添加子节点Timer，设置Wait Time为0.1。打开Node信号面板，双击timeout()信号，添加连接函数到脚本里。<br>
+func _on_Timer_timeout():<br>
+if shootNum &gt; bulletNum:<br>
+$Timer.stop()<br>
+else:<br>
+shoot()<br>
+添加一个start函数，调用武器（这个start函数区分Bullet的start函数）<br>
+func start():<br>
+$Timer.start()</p>
+<p>创建主场景，将武器添加到场景中。以Node2D为根节点，重命名为MainScene，定位一个合理的位置。<br>
+创建脚本MainScene.gd<br>
+在_ready函数里添加：<br>
+func _ready():<br>
+$Weapon01.start()<br>
+保存场景，点击运行，选择其为默认场景，看效果。</p>
+<p>原文地址：https://zhuanlan.zhihu.com/p/272273232</p>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://github.com/willusim/GodotBlog/post/xue-xi-bi-ji/">
+                  <h3 class="post-title">
+                    学习笔记
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

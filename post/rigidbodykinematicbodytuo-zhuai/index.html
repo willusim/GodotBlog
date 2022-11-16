@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>RigidBody（KinematicBody）拖拽 | Godot日常</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://github.com/willusim/GodotBlog/favicon.ico?v=1668598154738">
+<link rel="stylesheet" href="https://github.com/willusim/GodotBlog/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="目标：想要用鼠标拾取和移动刚体
+使用刚体可能很棘手。Godot的物理引擎控制着它们的运动，干扰这些运动往往会导致意想不到的结果。关键是要利用body（物体）的mode属性。这同样适用于2D或3D。
+我们将从刚体对象开始，添加Sprite和C..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://github.com/willusim/GodotBlog">
+        <img src="https://github.com/willusim/GodotBlog/images/avatar.png?v=1668598154738" class="site-logo">
+        <h1 class="site-title">Godot日常</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            回到首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            学习笔记
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            实习项目
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            自我介绍
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      学习制作小游戏，应用Godot到能胜任的地方，不只是游戏，物联网啊、窗体制作啊等等。
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a> | <a class="rss" href="https://github.com/willusim/GodotBlog/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">RigidBody（KinematicBody）拖拽</h2>
+            <div class="post-date">2022-11-16</div>
+            
+            <div class="post-content" v-pre>
+              <p>目标：想要用鼠标拾取和移动刚体<br>
+使用刚体可能很棘手。Godot的物理引擎控制着它们的运动，干扰这些运动往往会导致意想不到的结果。关键是要利用body（物体）的mode属性。这同样适用于2D或3D。<br>
+我们将从刚体对象开始，添加Sprite和CollisionShape2D。如果要设置“反弹”（Bounce）和“摩擦力”（Friction）属性，也可以添加PhysicsMaterial。<br>
+将body（物体）放在一个名为“pickable”的小组中。我们将使用它来允许主场景中可拾取对象的多个实例。</p>
+<!-- more -->
+<p>千万记住，这里有个需要注意的就是“节点属性设置成pickable”<br>
+附加脚本并连接主体的_input_event信号。<br>
+extends RigidBody2D<br>
+signal clicked<br>
+var held = false<br>
+func _input_event(viewport,event,shape_idx):<br>
+if event is InputEventMouseButton:<br>
+if event.button_index == BUTTON_LEFT and event.pressed:<br>
+emit_signal(&quot;clicked&quot;,self)</p>
+<p>当检测到鼠标点击时，我们会发出信号。由于可以有许多实体body，我们将让主场景管理一个实体(body)是否可以拖动，或者是否已经有一个处于held状态。<br>
+func _physics_process(delta):<br>
+if held:<br>
+global_transform.origin = get_global_mouse_position()</p>
+<p>如果实体（body）被拖拽了，我们将用鼠标的位置来更新它的位置。<br>
+func pickup():<br>
+if held:<br>
+return<br>
+mode = RigidBody2D.MODE_STATIC<br>
+held = true</p>
+<p>func drop(impulse = Vector2.ZERO):<br>
+if held:<br>
+mode = RigidBody2D.MODE_RIGID<br>
+apply_central_impulse(impulse)<br>
+held = false</p>
+<p>最后，这是捡起和放下物体（body）时要调用的两个函数。将模式更改为MODE_STATIC将从物理引擎处理中删除主体。请注意，其他对象仍可能与其碰撞。如果你不想这样，你也可以在这里禁用collision_layer和/或collision_mask。只需记住在丢弃时重新启用它们。<br>
+在drop函数中，当我们变回MODE_RIGID时，身体将进入睡眠状态。睡眠中的身体可以通过施加一个脉冲被唤醒（即使是零级脉冲也可以）。然而，通过传递一个可选的脉冲值，我们可以在释放时“抛出”对象。</p>
+<p>主场景<br>
+创建一个主场景，有静态障碍物（地面或TileMap），并实例化几个可以拾取的物体（body）<br>
+给主场景添加脚本<br>
+extends Node2D<br>
+var held_object = null<br>
+func _ready():<br>
+for node in get_tree().get_node_in_group(&quot;pickable&quot;):<br>
+node.connect(&quot;clicked&quot;,self,&quot;_on_pickable_clicked&quot;)</p>
+<p>func _on_pickable_clicked(object):<br>
+if !held_object:<br>
+held_object = object<br>
+held_object.pickup()</p>
+<p>这里是我们连接刚体实例的信号的地方。connected函数设置held_object，以便我们知道当前正在拖动什么，并调用body的pickup（）方法。<br>
+func _unhandled_input(event):<br>
+if event is InputEventMouseButton and event.button_index == BUTTON_LEFT:<br>
+if held_object and !event.pressed:<br>
+held_object.drop(Input.get_last_mouse_speed())<br>
+held_object = null</p>
+<p>创建一个带有一些静态身体障碍物或TileMap的主场景，并实例化几个可拾取身体的副本。这里是我们连接刚体实例的信号的地方。connected函数设置held_object，以便我们知道当前正在拖动什么，并调用body的pickup（）方法。最后，在拖动过程中释放鼠标时，我们可以执行相反的操作。注意get_last_mouse_speed（）的用法-请小心！您可能会发现自己以高速启动刚体，尤其是当刚体的质量值较低时。将其限制在合理的值可能是一个好主意。尝试找出适合你的方法。</p>
+
+            </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://github.com/willusim/GodotBlog/post/zhi-zuo-dan-mu/">
+                  <h3 class="post-title">
+                    制作弹幕
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>

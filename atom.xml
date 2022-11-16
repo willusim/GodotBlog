@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://github.com/willusim/GodotBlog</id>
+    <title>Godot日常</title>
+    <updated>2022-11-16T11:29:39.125Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://github.com/willusim/GodotBlog"/>
+    <link rel="self" href="https://github.com/willusim/GodotBlog/atom.xml"/>
+    <subtitle>学习制作小游戏，应用Godot到能胜任的地方，不只是游戏，物联网啊、窗体制作啊等等。</subtitle>
+    <logo>https://github.com/willusim/GodotBlog/images/avatar.png</logo>
+    <icon>https://github.com/willusim/GodotBlog/favicon.ico</icon>
+    <rights>All rights reserved 2022, Godot日常</rights>
+    <entry>
+        <title type="html"><![CDATA[RigidBody（KinematicBody）拖拽]]></title>
+        <id>https://github.com/willusim/GodotBlog/post/rigidbodykinematicbodytuo-zhuai/</id>
+        <link href="https://github.com/willusim/GodotBlog/post/rigidbodykinematicbodytuo-zhuai/">
+        </link>
+        <updated>2022-11-16T02:45:58.000Z</updated>
+        <summary type="html"><![CDATA[<p>目标：想要用鼠标拾取和移动刚体<br>
+使用刚体可能很棘手。Godot的物理引擎控制着它们的运动，干扰这些运动往往会导致意想不到的结果。关键是要利用body（物体）的mode属性。这同样适用于2D或3D。<br>
+我们将从刚体对象开始，添加Sprite和CollisionShape2D。如果要设置“反弹”（Bounce）和“摩擦力”（Friction）属性，也可以添加PhysicsMaterial。<br>
+将body（物体）放在一个名为“pickable”的小组中。我们将使用它来允许主场景中可拾取对象的多个实例。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>目标：想要用鼠标拾取和移动刚体<br>
+使用刚体可能很棘手。Godot的物理引擎控制着它们的运动，干扰这些运动往往会导致意想不到的结果。关键是要利用body（物体）的mode属性。这同样适用于2D或3D。<br>
+我们将从刚体对象开始，添加Sprite和CollisionShape2D。如果要设置“反弹”（Bounce）和“摩擦力”（Friction）属性，也可以添加PhysicsMaterial。<br>
+将body（物体）放在一个名为“pickable”的小组中。我们将使用它来允许主场景中可拾取对象的多个实例。</p>
+<!-- more -->
+<p>千万记住，这里有个需要注意的就是“节点属性设置成pickable”<br>
+附加脚本并连接主体的_input_event信号。<br>
+extends RigidBody2D<br>
+signal clicked<br>
+var held = false<br>
+func _input_event(viewport,event,shape_idx):<br>
+if event is InputEventMouseButton:<br>
+if event.button_index == BUTTON_LEFT and event.pressed:<br>
+emit_signal(&quot;clicked&quot;,self)</p>
+<p>当检测到鼠标点击时，我们会发出信号。由于可以有许多实体body，我们将让主场景管理一个实体(body)是否可以拖动，或者是否已经有一个处于held状态。<br>
+func _physics_process(delta):<br>
+if held:<br>
+global_transform.origin = get_global_mouse_position()</p>
+<p>如果实体（body）被拖拽了，我们将用鼠标的位置来更新它的位置。<br>
+func pickup():<br>
+if held:<br>
+return<br>
+mode = RigidBody2D.MODE_STATIC<br>
+held = true</p>
+<p>func drop(impulse = Vector2.ZERO):<br>
+if held:<br>
+mode = RigidBody2D.MODE_RIGID<br>
+apply_central_impulse(impulse)<br>
+held = false</p>
+<p>最后，这是捡起和放下物体（body）时要调用的两个函数。将模式更改为MODE_STATIC将从物理引擎处理中删除主体。请注意，其他对象仍可能与其碰撞。如果你不想这样，你也可以在这里禁用collision_layer和/或collision_mask。只需记住在丢弃时重新启用它们。<br>
+在drop函数中，当我们变回MODE_RIGID时，身体将进入睡眠状态。睡眠中的身体可以通过施加一个脉冲被唤醒（即使是零级脉冲也可以）。然而，通过传递一个可选的脉冲值，我们可以在释放时“抛出”对象。</p>
+<p>主场景<br>
+创建一个主场景，有静态障碍物（地面或TileMap），并实例化几个可以拾取的物体（body）<br>
+给主场景添加脚本<br>
+extends Node2D<br>
+var held_object = null<br>
+func _ready():<br>
+for node in get_tree().get_node_in_group(&quot;pickable&quot;):<br>
+node.connect(&quot;clicked&quot;,self,&quot;_on_pickable_clicked&quot;)</p>
+<p>func _on_pickable_clicked(object):<br>
+if !held_object:<br>
+held_object = object<br>
+held_object.pickup()</p>
+<p>这里是我们连接刚体实例的信号的地方。connected函数设置held_object，以便我们知道当前正在拖动什么，并调用body的pickup（）方法。<br>
+func _unhandled_input(event):<br>
+if event is InputEventMouseButton and event.button_index == BUTTON_LEFT:<br>
+if held_object and !event.pressed:<br>
+held_object.drop(Input.get_last_mouse_speed())<br>
+held_object = null</p>
+<p>创建一个带有一些静态身体障碍物或TileMap的主场景，并实例化几个可拾取身体的副本。这里是我们连接刚体实例的信号的地方。connected函数设置held_object，以便我们知道当前正在拖动什么，并调用body的pickup（）方法。最后，在拖动过程中释放鼠标时，我们可以执行相反的操作。注意get_last_mouse_speed（）的用法-请小心！您可能会发现自己以高速启动刚体，尤其是当刚体的质量值较低时。将其限制在合理的值可能是一个好主意。尝试找出适合你的方法。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[制作弹幕]]></title>
+        <id>https://github.com/willusim/GodotBlog/post/zhi-zuo-dan-mu/</id>
+        <link href="https://github.com/willusim/GodotBlog/post/zhi-zuo-dan-mu/">
+        </link>
+        <updated>2022-11-14T04:24:10.000Z</updated>
+        <content type="html"><![CDATA[<p>创建两个游戏对象：子弹和武器<br>
+创建子弹：<br>
+新建场景，根节点KinematicBody2D，重命名Bullet01。<br>
+添加子节点Polygon2D，打开 Inspector &gt; Data &gt; Polygon ， 将Size设置为4。同时为下面出现的点添加x, y值。考虑到演示作用，我们将子弹做大一点，因此，将边长设置为10，如：0.x = 10, 0.y = -10, 1.x = 10, 1.y = -10, 2.x = 10, 2.y = 10, 3.x = -10, 3.y = 10。<br>
+添加子节点CollisionShape2D节点，碰撞形状为矩形。<br>
+添加可见控制节点VisibilityNotifier2D节点。<br>
+添加脚本到Bullet01，保存为Bullet01.gd<br>
+定义变量：<br>
+var speed = 750<br>
+var velocity = Vector2()<br>
+创建start函数（供武器调用）<br>
+func start (pos, dir): #pos：武器的位置，dir：武器的旋转角度<br>
+position = pos<br>
+rotation = dir<br>
+velocity = Vector2(speed, 0).rotated(rotation)<br>
+在 _physics_process 函数中执行移动方法：<br>
+func _physics_process(delta):<br>
+move_and_collide(velocity * delta)<br>
+由武器来控制子弹发射，加一行判断：if get_parent().isShooting:<br>
+func _physics_process(delta):<br>
+if get_parent().isShooting:<br>
+move_and_collide(velocity * delta)<br>
+处理离开屏幕的信号，选中VisibilityNotifier2D节点，在Node面板，双击screen_exited信号，在Bullet01脚本中创建一个函数：<br>
+func _on_VisibilityNotifier2D_screen_exited():<br>
+queue_free()</p>
+<p>创建武器<br>
+创建场景，根节点Node2D，重命名为Weapon01.<br>
+创建脚本，Weapon01.gd，开始定义变量：<br>
+var Bullet01 = preload(&quot;res://Bullet01.tscn&quot;)<br>
+var bulletNum = 18<br>
+var shootNum = 0<br>
+var isShooting = true<br>
+创建一个shoot函数，用于实例化子弹并将它添加到武器场景中<br>
+func shoot():<br>
+var b = Bullet01.instance()<br>
+b.start(Vector2(0,0),shootNum * 0.35) #在Bullet.gd中定义的start函数<br>
+add_child(b)<br>
+shootNum += 1<br>
+创建计时器，添加子节点Timer，设置Wait Time为0.1。打开Node信号面板，双击timeout()信号，添加连接函数到脚本里。<br>
+func _on_Timer_timeout():<br>
+if shootNum &gt; bulletNum:<br>
+$Timer.stop()<br>
+else:<br>
+shoot()<br>
+添加一个start函数，调用武器（这个start函数区分Bullet的start函数）<br>
+func start():<br>
+$Timer.start()</p>
+<p>创建主场景，将武器添加到场景中。以Node2D为根节点，重命名为MainScene，定位一个合理的位置。<br>
+创建脚本MainScene.gd<br>
+在_ready函数里添加：<br>
+func _ready():<br>
+$Weapon01.start()<br>
+保存场景，点击运行，选择其为默认场景，看效果。</p>
+<p>原文地址：https://zhuanlan.zhihu.com/p/272273232</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[学习笔记]]></title>
+        <id>https://github.com/willusim/GodotBlog/post/xue-xi-bi-ji/</id>
+        <link href="https://github.com/willusim/GodotBlog/post/xue-xi-bi-ji/">
+        </link>
+        <updated>2022-11-13T04:37:48.000Z</updated>
+        <content type="html"><![CDATA[<p>从2022年10月1日，开始，国庆在出租屋内，决定学习一门新技术作为自己的B计划，或者说是一直以来的爱好，希望圆自己年轻时候的小小梦想，把自己的一些小想法想办法实现出来。<br>
+<img src="https://github.com/willusim/GodotBlog/post-images/1668314612690.jpg" alt="" loading="lazy"></p>
+<p>第一次使用Gridea，感觉很轻便，不错😅</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Hello Gridea]]></title>
+        <id>https://github.com/willusim/GodotBlog/post/hello-gridea/</id>
+        <link href="https://github.com/willusim/GodotBlog/post/hello-gridea/">
+        </link>
+        <updated>2018-12-11T16:00:00.000Z</updated>
+        <summary type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
+✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
+✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
+<!-- more -->
+<p><a href="https://github.com/getgridea/gridea">Github</a><br>
+<a href="https://gridea.dev/">Gridea 主页</a><br>
+<a href="https://fehey.com/">示例网站</a></p>
+<h2 id="特性">特性👇</h2>
+<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
+<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
+<p>🏷️  你可以对文章进行标签分组</p>
+<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
+<p>💻  你可以在 <strong>Windows</strong>，<strong>MacOS</strong> 或 <strong>Linux</strong> 设备上使用此客户端</p>
+<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
+<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
+<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
+<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
+<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
+<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前 🏃</p>
+<p>未来，它一定会成为你离不开的伙伴</p>
+<p>尽情发挥你的才华吧！</p>
+<p>😘 Enjoy~</p>
+]]></content>
+    </entry>
+</feed>
